@@ -47,36 +47,3 @@ main {
     display: flex;
     gap: 12px;
 }
-
-/* Blackjack
-
-Blackjack ist ein klassisches Kartenspiel für den Browser, umgesetzt mit HTML, CSS und JavaScript. Spiele gegen den Dealer auf einem stilisierten Pokertisch mit echten Kartenbildern!
-
-## ✨ Über die Anwendung
-
-Dieses Blackjack-Spiel bietet ein authentisches Spielerlebnis mit echten Kartenwerten, einem grünen Pokertisch und ansprechender Benutzeroberfläche. Ziehe Karten, passe und versuche, den Dealer zu schlagen – alles direkt im Browser.
-
-## 🔧 Entwicklung
-
-- **Technologien:** HTML, CSS, JavaScript
-- **Key Features:**
-  - Karten werden als SVG-Bilder aus `/assets/img/cards/` angezeigt (z.B. `AS.svg`, `10H.svg`)
-  - Grüner, ovaler Pokertisch mit optionalem Holzrand (`#8B5C2A`)
-  - Buttons für „Karte ziehen“, „Passen“ und „Neues Spiel“
-  - Responsive Design und übersichtliche Darstellung
-  - Schwarzer Hintergrund für den Spielbereich
-
-## 🚀 Loslegen
-
-1. Repository klonen
-2. Im Browser `index.html` öffnen
-3. Viel Spaß beim Spielen!
-
-## 💬 Feedback & Support
-
-Du hast Ideen, Fragen oder findest einen Bug? Erstelle gerne ein Issue oder einen Pull Request auf [GitHub](https://github.com/dein-github-nutzername/BlackJack).  
-Dein Feedback ist willkommen!
-
----
-
-Viel Spaß am virtuellen Pokertisch! */

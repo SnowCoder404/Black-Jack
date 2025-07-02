@@ -1,6 +1,14 @@
 const suits = ['spades', 'hearts', 'diamonds', 'clubs'];
 const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+let deck = [];
+let playerHand = [];
+let dealerHand = [];
+let dealerTurn = false;
 
+/**
+ * Creates a new deck of 52 cards.
+ * @returns {Array} The deck as an array of card objects.
+ */
 function createDeck() {
     const deck = [];
     for (let suit of suits) {
@@ -11,9 +19,11 @@ function createDeck() {
     return deck;
 }
 
-let deck = [];
-
-// Berechnet den Wert einer Karte
+/**
+ * Returns the numeric value of a card.
+ * @param {Object} card - The card object.
+ * @returns {number} The value of the card.
+ */
 function getCardValue(card) {
     if (card.value === 'A') {
         return 11;
@@ -24,27 +34,29 @@ function getCardValue(card) {
     }
 }
 
-// Berechnet den Wert einer Hand (Array von Karten)
+/**
+ * Calculates the total value of a hand.
+ * @param {Array} hand - Array of card objects.
+ * @returns {number} The total value of the hand.
+ */
 function getHandValue(hand) {
-    let value = 0;
-    let aceCount = 0;
-
+    let value = 0, aceCount = 0;
     for (let card of hand) {
         let cardValue = getCardValue(card);
         value += cardValue;
         if (card.value === 'A') aceCount++;
     }
-
-    // Passe Ass-Wert an, falls nötig (Ass kann auch 1 zählen)
     while (value > 21 && aceCount > 0) {
         value -= 10;
         aceCount--;
     }
-
     return value;
 }
 
-// Deck mischen
+/**
+ * Shuffles the deck in place.
+ * @param {Array} deck - The deck to shuffle.
+ */
 function shuffleDeck(deck) {
     for (let i = deck.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -52,11 +64,10 @@ function shuffleDeck(deck) {
     }
 }
 
-// Spieler- und Dealer-Hand
-let playerHand = [];
-let dealerHand = [];
-
-// Karte ziehen
+/**
+ * Draws a card from the deck and adds it to the given hand.
+ * @param {Array} hand - The hand to add the card to.
+ */
 function drawCard(hand) {
     if (deck.length === 0) return;
     hand.push(deck.pop());
@@ -69,87 +80,149 @@ function drawCard(hand) {
     }
 }
 
-// Gibt den Dateinamen für das Kartenbild zurück (z.B. "AS.png" für Ass Pik)
+/**
+ * Returns the image path for a given card.
+ * @param {Object} card - The card object.
+ * @returns {string} The image path for the card.
+ */
 function getCardImage(card) {
-    // Mapping für Farben und Werte zu Dateinamen
     const suitMap = {
         'spades': 'S',
         'hearts': 'H',
         'diamonds': 'D',
         'clubs': 'C'
     };
-    // Beispiel: /assets/img/cards/AS.svg (Ass Pik), /assets/img/cards/10H.svg (10 Herz)
     return `/assets/img/cards/${card.value}${suitMap[card.suit]}.svg`;
 }
 
-// Gibt HTML für eine Hand zurück (Karten als <img>)
-function handToHTML(hand) {
-    return hand.map(card =>
-        `<img src="${getCardImage(card)}" alt="${card.value} ${card.suit}" style="height:150px;">`
-    ).join('');
+/**
+ * Returns HTML for a hand as a string of <img> tags.
+ * @param {Array} hand - Array of card objects.
+ * @param {boolean} [showDealerHoleCard=false] - If true, shows the dealer's second card face down.
+ * @returns {string} HTML string for the hand.
+ */
+function handToHTML(hand, showDealerHoleCard = false) {
+    return hand.map((card, idx) => {
+        if (showDealerHoleCard && idx === 1) {
+            return `<img src="/assets/img/cards/EmptyCard.svg" alt="Hidden card" style="height:150px;">`;
+        }
+        return `<img src="${getCardImage(card)}" alt="${card.value} ${card.suit}" style="height:150px;">`;
+    }).join('');
 }
 
-// UI aktualisieren
+/**
+ * Updates the UI to reflect the current game state.
+ */
 function updateUI() {
+    const dealerShowHole = !dealerTurn;
     document.getElementById('player-hand').innerHTML = handToHTML(playerHand);
     document.getElementById('player-value').textContent = getHandValue(playerHand);
-    document.getElementById('dealer-hand').innerHTML = handToHTML(dealerHand);
-    document.getElementById('dealer-value').textContent = getHandValue(dealerHand);
+    document.getElementById('dealer-hand').innerHTML = handToHTML(dealerHand, dealerShowHole);
+    let dealerValue = getHandValue(dealerHand);
+    if (dealerShowHole && dealerHand.length > 1) {
+        dealerValue = getHandValue([dealerHand[0]]);
+    }
+    document.getElementById('dealer-value').textContent = dealerValue;
 }
 
-// Event Listener für "Karte ziehen"
-document.getElementById('hit-btn').addEventListener('click', function() {
-    drawCard(playerHand);
-});
+/**
+ * Handles the stand action for the player.
+ * Dealer draws cards according to Blackjack rules.
+ */
+async function stand() {
+    dealerTurn = true;
+    if (!dealerBlackJack()) {
+        await drawCardForDealer();
+        checkGameResult();
+        document.getElementById('hit-btn').disabled = true;
+        document.getElementById('stand-btn').disabled = true;
+    }
+}
 
-// Funktion für "Passen" (Stand)
-function stand() {
-    // Dealer zieht Karten bis mindestens 17 Punkte
+/**
+ * Checks if the dealer has Blackjack with the first two cards.
+ * @returns {boolean} True if dealer has Blackjack, otherwise false.
+ */
+function dealerBlackJack() { 
+    if (getHandValue(dealerHand) === 21 && dealerHand.length === 2) {
+        updateUI();
+        document.getElementById('message').textContent = 'Blackjack! Dealer gewinnt!';
+        document.getElementById('hit-btn').disabled = true;
+        document.getElementById('stand-btn').disabled = true;
+        return true;
+    } else {
+        return false;
+    }
+}
+
+/**
+ * Dealer draws cards according to Blackjack rules.
+ */
+async function drawCardForDealer() {
+    while ( getHandValue(dealerHand) < getHandValue(playerHand) && getHandValue(playerHand) <= 21) {
+        drawCard(dealerHand);
+    }
     while (getHandValue(dealerHand) < 17) {
         drawCard(dealerHand);
     }
+}
 
-    // Ergebnis anzeigen
+/**
+ * Checks the result of the game and updates the message.
+ */
+function checkGameResult() {
     const playerValue = getHandValue(playerHand);
     const dealerValue = getHandValue(dealerHand);
     let message = '';
-
-    if (playerValue > 21) {
-        message = 'Du hast verloren! (Überkauft)';
-    } else if (dealerValue > 21) {
-        message = 'Dealer überkauft! Du gewinnst!';
-    } else if (playerValue > dealerValue) {
-        message = 'Du gewinnst!';
-    } else if (playerValue < dealerValue) {
-        message = 'Dealer gewinnt!';
-    } else {
-        message = 'Unentschieden!';
-    }
-
+    playerValue > 21 ? message = 'Du hast verloren! (Überkauft)':
+    dealerValue > 21 ? message = 'Dealer überkauft! Du gewinnst!':
+    playerValue > dealerValue ? message = 'Du gewinnst!':
+    playerValue < dealerValue ? message = 'Dealer gewinnt!':
+    message = 'Unentschieden!';
+    updateUI();
     document.getElementById('message').textContent = message;
-
-    // Buttons deaktivieren
-    document.getElementById('hit-btn').disabled = true;
-    document.getElementById('stand-btn').disabled = true;
 }
 
-// Event Listener für "Passen"
-document.getElementById('stand-btn').addEventListener('click', stand);
-
-// Spielstart initialisieren
+/**
+ * Starts a new game and deals the initial cards.
+ */
 function startGame() {
     deck = createDeck();
     shuffleDeck(deck);
-    playerHand = [];
-    dealerHand = [];
-    drawCard(playerHand);
-    drawCard(playerHand);
-    drawCard(dealerHand);
-    updateUI();
-
+    distributeCards();
     document.getElementById('hit-btn').disabled = false;
     document.getElementById('stand-btn').disabled = false;
     document.getElementById('message').textContent = '';
+    checkPlayerBlackJack();
 }
 
-startGame();
+/**
+ * Deals two cards to both player and dealer and resets the game state.
+ */
+function distributeCards() {
+    playerHand = [];
+    dealerHand = [];
+    dealerTurn = false;
+    drawCard(playerHand);
+    drawCard(playerHand);
+    drawCard(dealerHand);
+    drawCard(dealerHand);
+    updateUI();
+}
+
+/**
+ * Checks if the player has Blackjack after the initial deal.
+ */
+function checkPlayerBlackJack() {
+    const playerValue = getHandValue(playerHand);
+    if (playerValue === 21) {
+        document.getElementById('message').textContent = 'Blackjack! Spieler gewinnt!';
+        document.getElementById('hit-btn').disabled = true;
+        document.getElementById('stand-btn').disabled = true;
+    }
+}
+
+document.getElementById('stand-btn').addEventListener('click', stand);
+document.getElementById('hit-btn').addEventListener('click', () => {
+    drawCard(playerHand);
+});
