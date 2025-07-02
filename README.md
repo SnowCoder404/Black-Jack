@@ -1,4 +1,4 @@
-# Blackjack
+# Black Jack
 
 Blackjack is a classic card game for the browser, built with HTML, CSS, and JavaScript. Play against the dealer on a stylish poker table with real card images!
 
