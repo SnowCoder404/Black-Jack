@@ -6,7 +6,13 @@ Blackjack is a classic card game for the browser, built with HTML, CSS, and Java
 
 This Blackjack game offers an authentic experience with real card values, a green poker table, and a clean user interface. Draw cards, stand, and try to beat the dealer – all directly in your browser.
 
-## 🔧 **Technologies:** HTML, CSS, JavaScript
+## 🔧 Technologies
+
+<div style="display: flex;">
+   <img src="https://skillicons.dev/icons?i=js" height="75" style="margin-right: 6px;" alt="JavaScript"/>
+   <img src="https://skillicons.dev/icons?i=css" height="75" style="margin-right: 6px;" alt="CSS"/>
+   <img src="https://skillicons.dev/icons?i=html" height="75" style="margin-right: 6px;" alt="HTML5"/>
+</div>
 
 ## 🚀 Getting Started
 
